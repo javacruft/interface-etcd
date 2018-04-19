@@ -16,6 +16,7 @@ import os
 from charms.reactive import RelationBase
 from charms.reactive import hook
 from charms.reactive import scopes
+from charmhelpers.core import hookenv
 
 
 class EtcdClient(RelationBase):
@@ -50,6 +51,19 @@ class EtcdClient(RelationBase):
     def get_connection_string(self):
         ''' Return the connection string, if available, or None. '''
         return self.get_remote('connection_string')
+
+    def get_connection_strings(self):
+        ''' Return a list of connection strings for all etcd units. '''
+        values = []
+        for conversation in etcd.conversations():
+            for relation_id in conversation.relation_ids:
+                for unit in hookenv.related_units(relation_id):
+                    value = hookenv.relation_get('connection_string',
+                                                 unit,
+                                                 relation_id)
+                    if value:
+                         values.append(value)
+        return list(set(values))
 
     def get_version(self):
         ''' Return the version of the etd protocol being used, or None. '''
